@@ -17,3 +17,17 @@ Wilke Dononelli
 * qiskit
 
 ------------
+------------
+
+# Installation
+The code can be installed by cloning the Git repository and installing it using `pip`:
+
+```bash
+git clone https://github.com/thequantumchemist/ase_quantum_vqe
+cd ase_quantum_vqe
+pip install .
+```
+
+Alternatively, you can add ``~/ase_quantum_vqe`` to your $PYTHONPATH environment variable after cloning the repository.
+
+------------

@@ -6,7 +6,6 @@ This work presents the ASE Quiskit interface which allows for atomistic simulati
 
 
 # Authors
-Rahel Weiß  
 Wilke Dononelli
 
 ------------

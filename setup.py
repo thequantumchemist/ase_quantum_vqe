@@ -9,10 +9,15 @@ setup(
     author_email='wido@uni-bremen.de',
     license='GPL-3.0',
     packages=['.','utils'],
-    install_requires=['agox',
-                      'numpy',
-                      'ase',
-                      'pytest'
+    install_requires=['qiskit==1.4.4',
+            'qiskit-ibm-runtime==0.41.1',
+            'qiskit-algorithms==0.3.1',
+            'qiskit-nature==0.7.2',
+            'qiskit-nature-pyscf>=0.4.0',
+            'pyscf>=2.0',
+            'ase>=3.26',
+            'numpy>=2.0',
+            'joblib>=1.5.1'
                       ],
 
     classifiers=[

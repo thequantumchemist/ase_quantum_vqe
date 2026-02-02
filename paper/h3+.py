@@ -13,10 +13,13 @@ from ase.optimize.minimahopping import MinimaHopping
 from ase_quantum_vqe.utils.utils import random_positions_with_min_distance
 
 print('If you want to repeat the calculation, you have to either delete the file hop.log and qn00....traj or run in different directories!')
-
+###############################
 #choose if a classical or a quantum (ADAPT-VQE) calculation should be performed 
 usecalculator='classical' # alternative: 'quantum'
 num_cpu_cores=9 #number of CPU cores used for numerical force evaluation
+num_minima_hopping_steps=10
+###############################
+print('You are performing a '+usecalculator+' calculation using '+str(num_cpu_cores)+' cpu cores')
 
 # create random positions
 positions = random_positions_with_min_distance()
@@ -53,53 +56,34 @@ atoms.calc = calc
 
 # Instantiate and run the minima hopping algorithm.
 hop = MinimaHopping(atoms, Ediff0=2.5, T0=4000.0)
-hop(totalsteps=10)
+hop(totalsteps=num_minima_hopping_steps)
 
+# Analyze the minimum energy configuration
+traj = Trajectory("minima.traj")
+min_atoms = min(traj, key=lambda atoms: atoms.get_potential_energy())
 
-# Calculator mit lokalem Aer-Simulator
-calcb = PySCFCalculator(basis='sto-3g', method='ccsd', charge=1, spin=0,n_jobs=9)
-
-dyn = BFGS(atoms, trajectory='h3_vqe.traj')
+#local structure optimization
+dyn = BFGS(min_atoms, trajectory='localoptimization.traj')
 dyn.run(fmax=0.005)
-e_vqe=atoms.get_potential_energy()
-vib = Vibrations(atoms, name='vibvqe',nfree=2)
+
+# vibrational analyzes
+vib = Vibrations(min_atoms, name='vib',nfree=2)
 vib.run()
 vib.summary()
-hessiana=vib.get_vibrations()
+hessian=vib.get_vibrations()
 
-# Neutral singlet H2
-#h2b = Atoms('H2', positions=[[0, 0, 0], [0, 0, 0.9]])
-atomsb = atoms.copy()
-atomsb.calc=calcb
+# Create a displaced atoms object for the strain anlyzes
+displaced_atoms=min_atoms.copy()
+displaced_atoms.positions[1][2]+=0.1
+displaced_atoms.calc=calc
+displaced_atoms.get_potential_energy()
+displaced_atoms.get_forces()
+write('displaced_atoms.traj',displaced_atoms)
 
-opt = BFGS(atomsb, trajectory='h3_ext.traj',maxstep=0.05)
-opt.run(fmax=0.005)
-
-e_ext=atomsb.get_potential_energy()
-vibb = Vibrations(atomsb, name='vibext',nfree=2)
-vibb.run()
-vibb.summary()
-hessianb = vibb.get_vibrations()
-#vibb.write_mode()
-
-atomsc=atoms.copy()
-atomsc.positions[1][2]+=0.1
-atomsc.calc=calc
-atomscc.get_potential_energy()
-
-j = Jedi(atoms, atomsc, hessian)
+#Perform the JEDI strain analyzes
+j = Jedi(min_atoms, displaced_atoms, hessian)
 j.set_bond_params(covf=2.0,vdwf=0.9)
 j.run()
 j.vmd_gen()
 
-atomsd=atomsb.copy()
-atomsd.positions[1][2]+=0.1
-atomsd.calc=calcb
-atomsd.get_potential_energy()
 
-jb = Jedi(atomsb, atomsd, hessianb)
-jb.set_bond_params(covf=2.0,vdwf=0.9)
-jb.run()
-
-print('E_exact, E_VQE, Ediff')
-print(e_ext,e_vqe,e_ext-e_vqe)

@@ -10,9 +10,9 @@ learning and for benchmarking quantum–classical workflows.
 
 ## Overview of the Examples
 
-- h2.py   : Minimal VQE workflow (geometry optimization, vibrations, CCSD reference)
-- h3+.py  : Global structure search using minima hopping (classical or quantum)
-- beh2.py : Advanced example combining VQE, machine learning, and molecular dynamics
+- h2.py   : Minimal VQE workflow (geometry optimization, vibrations, CCSD reference) (fast/ a few minutes)
+- h3+.py  : Global structure search using minima hopping (classical or quantum) (medium /depending on number of cores ~1-5 hours)
+- beh2.py : Advanced example combining VQE, machine learning, and molecular dynamics (long / more than a day)
 
 ---
 

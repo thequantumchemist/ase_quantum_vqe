@@ -17,7 +17,7 @@ setup(
         'qiskit-nature==0.7.2',
         'qiskit-nature-pyscf>=0.4.0',
         'ase>=3.26',
-        'agox>=3.10',
+        'agox>=3.11',
         'falcon-md>=1.0',
         'numpy>=2.0',
         'joblib>=1.5.1',

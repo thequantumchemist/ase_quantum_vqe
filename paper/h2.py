@@ -1,6 +1,6 @@
 from ase import Atoms
 from ase.optimize.bfgslinesearch import BFGSLineSearch as BFGS
-from ase_quan tum_vqe.qiskit_vqe_calculator import QiskitVQECalculator
+from ase_quantum_vqe.qiskit_vqe_calculator import QiskitVQECalculator
 from ase.vibrations import Vibrations, Infrared
 from ase_quantum_vqe.utils.pyscf_calc import PySCFCalculator
 from ase.vibrations import Vibrations

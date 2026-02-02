@@ -61,7 +61,7 @@ hop(totalsteps=num_minima_hopping_steps)
 # Analyze the minimum energy configuration
 traj = Trajectory("minima.traj")
 min_atoms = min(traj, key=lambda atoms: atoms.get_potential_energy())
-
+min_atoms.calc=calc
 #local structure optimization
 dyn = BFGS(min_atoms, trajectory='localoptimization.traj')
 dyn.run(fmax=0.005)

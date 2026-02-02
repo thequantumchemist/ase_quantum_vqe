@@ -11,7 +11,8 @@ learning and for benchmarking quantum–classical workflows.
 ## Overview of the Examples
 
 - h2.py   : Minimal VQE workflow (geometry optimization, vibrations, CCSD reference) (fast/ a few minutes)
-- h3+.py  : Global structure search using minima hopping (classical or quantum) (medium /depending on number of cores ~1-5 hours)
+- h3+.py  : Global structure search using minima hopping (classical or quantum) (medium /depending on number of cores ~0.5-5 hours)
+- h2_ML_FALCON_MD.py: Advanced example combining VQE, machine learning, and molecular dynamics (long / up to several hours)
 - beh2.py : Advanced example combining VQE, machine learning, and molecular dynamics (long / more than a day)
 
 ---
@@ -49,7 +50,20 @@ Delete hop.log and qn00*.traj before rerunning, or use a fresh directory.
 
 ---
 
-## Example 3: beh2.py — On-the-Fly Quantum / ML Molecular Dynamics
+## Example 3: h2_ML_FALCON_MD.py — On-the-Fly Quantum / ML Molecular Dynamics
+This example demonstrates
+- Geometry optimization of H₂ using a VQE-based quantum chemistry calculator
+- Generation of high-quality quantum reference data from VQE calculations
+- Construction of an on-the-fly machine-learning potential using FALCON
+- Molecular dynamics simulations accelerated by a Gaussian Process Regression (GPR) model
+- Dynamic switching between quantum reference evaluations and ML predictions
+- Efficient sampling of finite-temperature dynamics at 600 K
+
+Run with:
+    python h2_ML_FALCON_MD.py
+---
+
+## Example 4: beh2.py — On-the-Fly Quantum / ML Molecular Dynamics
 
 This example demonstrates:
 - Geometry optimization of BeH2 using VQE
@@ -66,7 +80,8 @@ Run with:
 
 1. h2.py   – Learn the basic ASE–VQE workflow
 2. h3+.py  – Explore global optimization and quantum/classical switching
-3. beh2.py – Advanced quantum/ML molecular dynamics
+3. h2_ML_FALCON_MD.py – Advanced quantum/ML molecular dynamics
+4. beh2.py – Advanced quantum/ML molecular dynamics with more realistic molecule
 
 ---
 

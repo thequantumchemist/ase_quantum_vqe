@@ -1,88 +1,210 @@
-from ase import Atoms
-#from ase.optimize import BFGS
-from ase.optimize.bfgslinesearch import BFGSLineSearch as BFGS
-from ase_quantum_vqe.qiskit_vqe_calculator import QiskitVQECalculator
-from ase.vibrations import Vibrations, Infrared
-from ase_quantum_vqe.utils.pyscf import PySCFCalculator
-from ase.vibrations import Vibrations
-import numpy as np
-from ase.io import read, write, Trajectory
-from strainjedi.jedi import Jedi
+# ---------------------------------------------------------------------
+# Imports
+# ---------------------------------------------------------------------
+
+# ASE core objects for defining atomic structures
 from ase import Atom, Atoms
+
+# Geometry optimization with line search
+from ase.optimize.bfgslinesearch import BFGSLineSearch as BFGS
+
+# Minima hopping global optimization algorithm
 from ase.optimize.minimahopping import MinimaHopping
+
+# IO utilities for trajectories and structures
+from ase.io import read, write, Trajectory
+
+# Vibrational analysis tools
+from ase.vibrations import Vibrations, Infrared
+
+# Qiskit-based VQE quantum chemistry calculator
+from ase_quantum_vqe.qiskit_vqe_calculator import QiskitVQECalculator
+
+# Classical reference quantum chemistry calculator (PySCF)
+from ase_quantum_vqe.utils.pyscf import PySCFCalculator
+
+# Utility function for generating random structures
 from ase_quantum_vqe.utils.utils import random_positions_with_min_distance
 
-print('If you want to repeat the calculation, you have to either delete the file hop.log and qn00....traj or run in different directories!')
-###############################
-#choose if a classical or a quantum (ADAPT-VQE) calculation should be performed
-usecalculator='classical' # alternative: 'quantum'
-num_cpu_cores=9 #number of CPU cores used for numerical force evaluation
-num_minima_hopping_steps=2
-###############################
-print('You are performing a '+usecalculator+' calculation using '+str(num_cpu_cores)+' cpu cores')
+# JEDI strain analysis
+from strainjedi.jedi import Jedi
 
-# create random positions
+# Numerical utilities
+import numpy as np
+
+
+# ---------------------------------------------------------------------
+# User-defined simulation parameters
+# ---------------------------------------------------------------------
+
+print(
+    "If you want to repeat the calculation, you must either delete "
+    "the files 'hop.log' and 'qn00*.traj' and 'md00*.traj' or run in a new directory!"
+)
+
+# Choose which calculator to use:
+#   'classical' -> PySCF reference calculation
+#   'quantum'   -> Qiskit ADAPT-VQE calculation
+usecalculator = 'classical'   # alternative: 'quantum'
+
+num_cpu_cores = 9             # Number of CPU cores for numerical force evaluation
+num_minima_hopping_steps = 2  # Number of global optimization steps
+
+print(
+    f"You are performing a {usecalculator} calculation using "
+    f"{num_cpu_cores} CPU cores"
+)
+
+
+# ---------------------------------------------------------------------
+# 1. Generate an initial random structure
+# ---------------------------------------------------------------------
+
+# Generate random atomic positions with a minimum interatomic distance
 positions = random_positions_with_min_distance()
+
+# Create an H3 system (charged later via the calculator)
 atoms = Atoms("H3", positions=positions)
 
 
-# Set the calculators.
-#VQE
+# ---------------------------------------------------------------------
+# 2. Define calculators
+# ---------------------------------------------------------------------
+
+# --- Quantum calculator: Qiskit ADAPT-VQE ---
 vqe_calc = QiskitVQECalculator(
-    basis='sto3g',
-    backend='aer',
-    n_jobs=num_cpu_cores,
+    basis='sto3g',           # Basis set
+
+    # optimizer=None,        # Explicit Qiskit optimizer object
+    # optimizer_name='SLSQP',# Optimizer name ('SLSQP', 'COBYLA', 'L_BFGS_B')
+
+    delta=0.01,              # Finite-difference displacement (Å)
+    n_jobs=num_cpu_cores,    # Number of CPU cores
+    charge=1,                # Total molecular charge
+    spin=0,                  # Spin multiplicity (2S)
+    maxiter=100,             # Maximum VQE optimizer iterations
+
+    backend='aer',           # Local Aer simulator backend
+    shots=2000,              # Number of measurement shots
+    # resilience_level=3,    # Error mitigation level (0–3)
+
+    # ibmq_token=None,       # IBM Quantum API token (if backend != 'aer')
+    # estimator_override=None,# External estimator (e.g. runtime estimator)
+
+    nfree=2,                 # Finite displacements per DOF for numerical forces
+    # coreorb=0,             # Number of frozen core orbitals
+    # vqe_eigenvalue=1e-07,  # Eigenvalue convergence threshold
+
+    # **kwargs               # Additional keyword arguments
+)
+
+# --- Classical reference calculator (PySCF + CCSD) ---
+classic_calc = PySCFCalculator(
+    basis='sto-3g',
+    method='ccsd',
     charge=1,
     spin=0,
-    delta=0.01,
-    shots=2000,
-#    resilience_level=3,
-#    optimizer_name='COBYLA',
-    nfree=2,
-#    coreorb=0,
-    maxiter=100        # VQE-Optimierungsschritte
+    n_jobs=num_cpu_cores
 )
-#Classical
-classic_calc=PySCFCalculator(basis='sto-3g', method='ccsd', charge=1, spin=0,n_jobs=num_cpu_cores)
+
+
+# ---------------------------------------------------------------------
+# 3. Select the active calculator
+# ---------------------------------------------------------------------
 
 if usecalculator == 'classical':
-    print('Use classical PySCF calculator and not the VQE calculator')
-    calc=classic_calc
+    print("Using classical PySCF calculator")
+    calc = classic_calc
 else:
-    print('Use VQE_ADAPT Calculator')
-    calc=vqe_calc
+    print("Using Qiskit ADAPT-VQE calculator")
+    calc = vqe_calc
 
+# Attach the selected calculator to the system
 atoms.calc = calc
 
-# Initiate and run the minima hopping algorithm.
-hop = MinimaHopping(atoms, Ediff0=2.5, T0=4000.0)
+
+# ---------------------------------------------------------------------
+# 4. Global structure search using minima hopping
+# ---------------------------------------------------------------------
+
+# Initialize the minima hopping algorithm
+hop = MinimaHopping(
+    atoms,
+    Ediff0=2.5,    # Initial energy difference threshold (eV)
+    T0=4000.0      # Initial temperature (K)
+)
+
+# Run the global optimization
 hop(totalsteps=num_minima_hopping_steps)
 
-# Analyze the minimum energy configuration
-traj = Trajectory("minima.traj")
-min_atoms = min(traj, key=lambda atoms: atoms.get_potential_energy())
-min_atoms.calc=calc
 
-#local structure optimization
+# ---------------------------------------------------------------------
+# 5. Analyze the minimum-energy structure
+# ---------------------------------------------------------------------
+
+# Load the minima trajectory generated by minima hopping
+traj = Trajectory("minima.traj")
+
+# Select the structure with the lowest potential energy
+min_atoms = min(traj, key=lambda atoms: atoms.get_potential_energy())
+
+# Re-attach the calculator to the minimum-energy structure
+min_atoms.calc = calc
+
+
+# ---------------------------------------------------------------------
+# 6. Local geometry optimization
+# ---------------------------------------------------------------------
+
+# Perform a local geometry optimization starting from the global minimum
 dyn = BFGS(min_atoms, trajectory='localoptimization.traj')
 dyn.run(fmax=0.005)
 
-# vibrational analyzes
-vib = Vibrations(min_atoms, name='vib',nfree=2)
+
+# ---------------------------------------------------------------------
+# 7. Vibrational analysis
+# ---------------------------------------------------------------------
+
+# Compute vibrational modes and frequencies
+vib = Vibrations(min_atoms, name='vib', nfree=2)
 vib.run()
 vib.summary()
-hessian=vib.get_vibrations()
 
-# Create a displaced atoms object for the strain anlyzes
-displaced_atoms=min_atoms.copy()
-displaced_atoms.positions[1][2]+=0.1
-displaced_atoms.calc=calc
+# Extract the Hessian matrix from the vibrational calculation
+hessian = vib.get_vibrations()
+
+
+# ---------------------------------------------------------------------
+# 8. Generate a displaced structure for strain analysis
+# ---------------------------------------------------------------------
+
+# Create a displaced copy of the optimized structure
+displaced_atoms = min_atoms.copy()
+
+# Apply a small displacement along z to the second atom
+displaced_atoms.positions[1][2] += 0.1
+
+# Attach the calculator and evaluate energy and forces
+displaced_atoms.calc = calc
 displaced_atoms.get_potential_energy()
 displaced_atoms.get_forces()
-write('displaced_atoms.traj',displaced_atoms)
 
-#Perform the JEDI strain analyzes
+# Store the displaced structure
+write('displaced_atoms.traj', displaced_atoms)
+
+
+# ---------------------------------------------------------------------
+# 9. JEDI strain analysis
+# ---------------------------------------------------------------------
+
+# Initialize the JEDI strain analysis
 j = Jedi(min_atoms, displaced_atoms, hessian)
-j.set_bond_params(covf=2.0,vdwf=0.9)
+
+# Set bond and van der Waals scaling factors
+j.set_bond_params(covf=2.0, vdwf=0.9)
+
+# Run the strain analysis
 j.run()
+
+# Generate VMD visualization files
 j.vmd_gen()

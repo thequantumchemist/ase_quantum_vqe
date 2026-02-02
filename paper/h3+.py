@@ -14,10 +14,10 @@ from ase_quantum_vqe.utils.utils import random_positions_with_min_distance
 
 print('If you want to repeat the calculation, you have to either delete the file hop.log and qn00....traj or run in different directories!')
 ###############################
-#choose if a classical or a quantum (ADAPT-VQE) calculation should be performed 
+#choose if a classical or a quantum (ADAPT-VQE) calculation should be performed
 usecalculator='classical' # alternative: 'quantum'
 num_cpu_cores=9 #number of CPU cores used for numerical force evaluation
-num_minima_hopping_steps=10
+num_minima_hopping_steps=2
 ###############################
 print('You are performing a '+usecalculator+' calculation using '+str(num_cpu_cores)+' cpu cores')
 
@@ -30,8 +30,8 @@ atoms = Atoms("H3", positions=positions)
 #VQE
 vqe_calc = QiskitVQECalculator(
     basis='sto3g',
-    backend='aer',   
-    n_jobs=num_cpu_cores,         
+    backend='aer',
+    n_jobs=num_cpu_cores,
     charge=1,
     spin=0,
     delta=0.01,
@@ -54,7 +54,7 @@ else:
 
 atoms.calc = calc
 
-# Instantiate and run the minima hopping algorithm.
+# Initiate and run the minima hopping algorithm.
 hop = MinimaHopping(atoms, Ediff0=2.5, T0=4000.0)
 hop(totalsteps=num_minima_hopping_steps)
 
@@ -62,6 +62,7 @@ hop(totalsteps=num_minima_hopping_steps)
 traj = Trajectory("minima.traj")
 min_atoms = min(traj, key=lambda atoms: atoms.get_potential_energy())
 min_atoms.calc=calc
+
 #local structure optimization
 dyn = BFGS(min_atoms, trajectory='localoptimization.traj')
 dyn.run(fmax=0.005)
@@ -85,5 +86,3 @@ j = Jedi(min_atoms, displaced_atoms, hessian)
 j.set_bond_params(covf=2.0,vdwf=0.9)
 j.run()
 j.vmd_gen()
-
-

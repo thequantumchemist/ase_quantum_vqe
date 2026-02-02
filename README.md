@@ -69,8 +69,12 @@ This ensures that PySCF is linked correctly against BLAS/LAPACK and avoids compi
 
 ### Step 3: Install this package
 
-Clone the repository and install it using `pip`:
+Clone the repository and install it using `pip` in one step:
+    
+    pip install git+https://github.com/thequantumchemist/ase_quantum_vqe.git
 
+Or alternately first clone the repository and then install it using `pip`:
+    
     git clone https://github.com/thequantumchemist/ase_quantum_vqe.git
     cd ase_quantum_vqe
     python -m pip install .
@@ -86,6 +90,7 @@ For development, you may prefer an editable installation:
 - Do **not** install this package into an environment that already contains an older Qiskit version.
 - Mixing legacy Qiskit (`qiskit < 1.0`) with the new modular Qiskit stack will lead to import and runtime errors.
 - Always use a **clean Conda environment** when working with this package.
+- In addition, the package hasn't been tested with the new Qiskit (`qiskit > 2.0`). For the moment usage with `1.0 < qiskit < 2.0` is tested and recommended
 
 ---
 

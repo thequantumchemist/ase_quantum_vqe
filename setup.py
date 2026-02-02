@@ -19,6 +19,8 @@ setup(
         'ase>=3.26',
         'numpy>=2.0',
         'joblib>=1.5.1',
+        'strainjedi>=1.0',
+        'falcon-md>=1.0'
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',

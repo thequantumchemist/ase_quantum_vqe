@@ -38,7 +38,8 @@ This example demonstrates:
 - Global structure search using minima hopping
 - Switching between classical and ADAPT-VQE energy evaluations
 - Selection of the lowest-energy structure from a trajectory
-- Local optimization, vibrational analysis, and JEDI strain analysis
+- Vibrational analysis using finite differences
+- JEDI strain analysis
 
 Run with:
     python h3+.py
@@ -53,7 +54,7 @@ Delete hop.log and qn00*.traj before rerunning, or use a fresh directory.
 This example demonstrates:
 - Geometry optimization of BeH2 using VQE
 - Generation of quantum training data
-- On-the-fly ML acceleration using FALCON
+- On-the-fly Machine Learning acceleration using FALCON
 - Molecular dynamics with a Langevin thermostat
 
 Run with:

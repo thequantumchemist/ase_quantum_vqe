@@ -37,7 +37,8 @@ This package is tested with the following versions:
 
 ⚠️ **Important:**
 The new Qiskit packaging (Qiskit ≥ 1.0) is **not backward compatible** with older Qiskit installations.
-If you already have Qiskit installed, you **mst use a fresh environment** to avoid dependency conflicts.
+If you already have Qiskit installed, you **mst use a fresh environment** to avoid dependency conflicts. In addition, Qiskit-nature-pyscf is currently only compatible with Qiskit < 2.0.
+We will update to Qiskit 2.0 asap.
 
 ---
 

@@ -56,7 +56,7 @@ atoms.calc = calc
 
 # Instantiate and run the minima hopping algorithm.
 hop = MinimaHopping(atoms, Ediff0=2.5, T0=4000.0)
-hop(totalsteps=num_minima_hopping_steps)
+hop(totalsteps=num_minima_hopping_steps).run()
 
 # Analyze the minimum energy configuration
 traj = Trajectory("minima.traj")

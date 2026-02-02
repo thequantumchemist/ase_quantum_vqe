@@ -136,6 +136,11 @@ The following example demonstrates a geometry optimization and vibrational analy
     vib.summary()
 
 ---
+## Tutorial
+
+A full tutorial is provided at https://github.com/thequantumchemist/ase_quantum_vqe/tree/main/paper
+
+---
 
 ## License
 

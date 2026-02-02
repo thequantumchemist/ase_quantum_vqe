@@ -16,7 +16,6 @@ setup(
         'qiskit-algorithms==0.3.1',
         'qiskit-nature==0.7.2',
         'qiskit-nature-pyscf>=0.4.0',
-        'pyscf>=2.0',
         'ase>=3.26',
         'numpy>=2.0',
         'joblib>=1.5.1',

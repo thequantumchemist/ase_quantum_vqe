@@ -21,6 +21,8 @@ learning and for benchmarking quantum–classical workflows.
 
 Please install the code as introduced one layer above
 
+---
+
 ## Example 1: h2.py — Minimal Quantum Chemistry Workflow
 
 This example demonstrates:

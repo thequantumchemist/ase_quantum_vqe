@@ -1,3 +1,4 @@
+import numpy as np
 def random_positions_with_min_distance(n_atoms=3, min_dist=0.6, box_size=3.0, max_tries=10000):
     for attempt in range(max_tries):
         # Create n_atoms random positions in a box of size box_size

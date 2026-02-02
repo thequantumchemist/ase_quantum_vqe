@@ -19,7 +19,6 @@ setup(
         'ase>=3.26',
         'agox>=3.11',
         'falcon-md>=1.0',
-        'numpy>=2.0',
         'joblib>=1.5.1',
         'strainjedi>=1.0'
     ],

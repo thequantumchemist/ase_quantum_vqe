@@ -6,21 +6,29 @@ from ase.vibrations import Vibrations, Infrared
 from ase_quantum_vqe.utils.pyscf import PySCFCalculator
 from ase.vibrations import Vibrations
 import numpy as np
-from ase.io import read
+from ase.io import read, write, Trajectory
 from strainjedi.jedi import Jedi
 from ase import Atom, Atoms
 from ase.optimize.minimahopping import MinimaHopping
 from ase_quantum_vqe.utils.utils import random_positions_with_min_distance
 
+print('If you want to repeat the calculation, you have to either delete the file hop.log and qn00....traj or run in different directories!')
 
+#choose if a classical or a quantum (ADAPT-VQE) calculation should be performed 
+usecalculator='classical' # alternative: 'quantum'
+num_cpu_cores=9 #number of CPU cores used for numerical force evaluation
+
+# create random positions
 positions = random_positions_with_min_distance()
 atoms = Atoms("H3", positions=positions)
 
-# Set the calculator.
-calc = QiskitVQECalculator(
+
+# Set the calculators.
+#VQE
+vqe_calc = QiskitVQECalculator(
     basis='sto3g',
-    backend='aer',    # <- Lokale Simulation
-    n_jobs=18,         # parallele Prozessanzahl für Kräfte
+    backend='aer',   
+    n_jobs=num_cpu_cores,         
     charge=1,
     spin=0,
     delta=0.01,
@@ -31,12 +39,21 @@ calc = QiskitVQECalculator(
 #    coreorb=0,
     maxiter=100        # VQE-Optimierungsschritte
 )
+#Classical
+classic_calc=PySCFCalculator(basis='sto-3g', method='ccsd', charge=1, spin=0,n_jobs=num_cpu_cores)
+
+if usecalculator == 'classical':
+    print('Use classical PySCF calculator and not the VQE calculator')
+    calc=classic_calc
+else:
+    print('Use VQE_ADAPT Calculator')
+    calc=vqe_calc
 
 atoms.calc = calc
 
 # Instantiate and run the minima hopping algorithm.
 hop = MinimaHopping(atoms, Ediff0=2.5, T0=4000.0)
-hop(totalsteps=50)
+hop(totalsteps=10)
 
 
 # Calculator mit lokalem Aer-Simulator

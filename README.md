@@ -2,8 +2,7 @@
 
 This repository provides an interface between the Atomic Simulation Environment (ASE) and Qiskit, enabling atomistic simulations using variational quantum algorithms (VQE) on either simulated quantum backends or real quantum hardware in a hybrid classical–quantum workflow.
 
-
-[ASE–Qiskit](qcmol.jpeg?raw=true "ASE–Qiskit")
+![Alt text](qcmol.jpeg?raw=true "ASE_Quiskit")
 
 ---
 

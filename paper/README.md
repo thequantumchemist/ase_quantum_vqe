@@ -18,17 +18,7 @@ learning and for benchmarking quantum–classical workflows.
 
 ## Prerequisites
 
-- Conda environment (recommended)
-- Python 3.9–3.11
-- ASE
-- Qiskit (see main README for version restrictions)
-- PySCF (installed via conda)
-
-Optional (for advanced examples):
-- falcon-md
-- strainjedi
-
----
+Please install the code as introduced one layer above
 
 ## Example 1: h2.py — Minimal Quantum Chemistry Workflow
 

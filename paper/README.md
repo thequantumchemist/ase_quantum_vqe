@@ -60,8 +60,10 @@ This example demonstrates
 - Molecular dynamics simulations accelerated by a Gaussian Process Regression (GPR) model
 - Dynamic switching between quantum reference evaluations and ML predictions
 - Efficient sampling of finite-temperature dynamics at 600 K
+
 Run with:
     python h2_ML_FALCON_MD.py
+    
 ---
 
 ## Example 4: beh2.py — On-the-Fly Quantum / ML Molecular Dynamics

@@ -145,3 +145,8 @@ A full tutorial is provided at https://github.com/thequantumchemist/ase_quantum_
 ## License
 
 This project is licensed under the **GPL-3.0 License**. See the `LICENSE` file for details.
+
+---
+## Citation
+please cite the following preprint when using the code:
+Wilke Dononelli,  Integration of Variational Quantum Algorithms into Atomistic Simulation Workflows, (2026) https://doi.org/10.48550/arXiv.2602.02695

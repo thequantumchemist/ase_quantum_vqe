@@ -1,29 +1,38 @@
 import pennylane as qml
 from pennylane import numpy as np
-from ase.calculators.calculator import Calculator, all_properties
+import numpy as onp
+from scipy.optimize import minimize
+from ase.calculators.calculator import Calculator, all_changes
 from ase.units import Hartree, Debye, _e, Bohr
+
 
 class PennyLaneAdaptVQECalculator(Calculator):
     """
-    ASE-Calculator utilizing PennyLane ADAPT-VQE in an Active Space.
-    Fully synchronized with Qiskit parameters including backend selection and maxiter.
-    Robust against complex-type expectation values for dipole moments.
+    ASE calculator based on PennyLane ADAPT-VQE in an (optional) frozen-core active space.
+
+    Energies are expectation values of the qubit Hamiltonian built with PennyLane's
+    differentiable Hartree-Fock ("dhf"). Forces are obtained analytically as
+    -dE/dR = -<psi(theta*)| dH(R)/dR |psi(theta*)>, i.e. by automatic differentiation of
+    the energy with respect to the nuclear coordinates at fixed, converged circuit
+    parameters theta*. This is exact only if theta* is variationally converged
+    (dE/dtheta = 0); the optimizer settings below are chosen with that in mind.
     """
     implemented_properties = ['energy', 'forces', 'dipole']
 
     def __init__(self,
                  basis="sto-3g",
                  charge=0,
-                 spin=0,                  # 2S = #alpha - #beta Electrons
-                 coreorb=0,               # Number of core orbitals to freeze
-                 maxiter=5,               # Max iterations of VQE-optimizer per geometry step (maps to Qiskit maxiter)
-                 backend="default.qubit", # "default.qubit" (Python) or "lightning.qubit" (Fast C++)
-                 vqe_eigenvalue=1e-05,    # Gradient/Eigenvalue threshold for ADAPT VQE circuit growth
-                 adapt_max_operators=4,  # Max number of operator layers in ADAPT circuit
-                 optimizer_name="SLSQP",  # 'SLSQP' or 'ADAM' or 'GradientDescent'
-                 vqe_lr=0.1,              # Learning rate for classical steps
-                 use_ADAPT_memory=True,   # If True, reuses the circuit structure across geometry updates
-                 shots=None,              # Total measurements per quantum circuit (None = exact analytic)
+                 spin=0,                     # 2S = N_alpha - N_beta
+                 coreorb=0,                  # number of frozen core orbitals
+                 maxiter=200,                # max optimizer iterations per VQE solve
+                 conv_tol=1e-9,              # energy convergence threshold (Hartree)
+                 backend="default.qubit",    # "default.qubit" or "lightning.qubit"
+                 vqe_eigenvalue=1e-5,        # ADAPT gradient threshold for adding operators
+                 adapt_max_operators=30,     # max number of ADAPT operators
+                 optimizer_name="BFGS",      # 'BFGS' / 'SLSQP' (scipy, exact simulators) or 'ADAM' / 'GradientDescent'
+                 vqe_lr=0.1,                 # step size for ADAM / GradientDescent
+                 use_ADAPT_memory=True,      # reuse operator list and warm-start parameters across geometries
+                 shots=None,                 # None = exact expectation values
                  **kwargs):
         super().__init__(**kwargs)
         self.basis = basis
@@ -31,167 +40,139 @@ class PennyLaneAdaptVQECalculator(Calculator):
         self.spin = spin
         self.coreorb = coreorb
         self.maxiter = maxiter
+        self.conv_tol = conv_tol
         self.backend = backend
         self.vqe_eigenvalue = vqe_eigenvalue
         self.adapt_max_operators = adapt_max_operators
+        self.optimizer_name = optimizer_name.upper()
         self.vqe_lr = vqe_lr
         self.use_ADAPT_memory = use_ADAPT_memory
         self.shots = shots
 
-        # Select classical optimizer
-        if optimizer_name.upper() == 'SLSQP' or optimizer_name.upper() == 'GRADIENTDESCENT':
-            self.vqe_optimizer_cls = qml.GradientDescentOptimizer
-        elif optimizer_name.upper() == 'ADAM':
-            self.vqe_optimizer_cls = qml.AdamOptimizer
-        else:
+        if self.optimizer_name in ("BFGS", "SLSQP", "L-BFGS-B"):
+            if shots is not None:
+                raise ValueError("scipy optimizers require exact expectation values (shots=None); "
+                                 "use optimizer_name='ADAM' with shots.")
+        elif self.optimizer_name not in ("ADAM", "GRADIENTDESCENT"):
             raise ValueError(f"Unknown optimizer_name: {optimizer_name}")
 
-        self.chosen_operators = []  # Stores selected excitation operators
-        self.vqe_weights = None      # Stores optimized VQE amplitudes
+        self.chosen_operators = []
+        self.vqe_weights = np.array([], requires_grad=True)
+        self.n_vqe_evaluations = 0   # bookkeeping: number of circuit executions (energy) in last call
 
-    def calculate(self, atoms=None, properties=['energy'], system_changes=all_properties):
+    # ------------------------------------------------------------------ helpers
+    @staticmethod
+    def _apply(op, w):
+        if len(op) == 2:
+            qml.SingleExcitation(w, wires=op)
+        else:
+            qml.DoubleExcitation(w, wires=op)
+
+    def _optimize(self, cost, weights):
+        """Minimise cost(weights); returns converged weights."""
+        if len(weights) == 0:
+            return weights
+        if self.optimizer_name in ("BFGS", "SLSQP", "L-BFGS-B"):
+            grad = qml.grad(cost)
+            f = lambda x: float(cost(np.array(x, requires_grad=True)))
+            g = lambda x: onp.array(grad(np.array(x, requires_grad=True)), dtype=float)
+            method = "BFGS" if self.optimizer_name == "BFGS" else self.optimizer_name
+            res = minimize(f, onp.array(weights, dtype=float), jac=g, method=method,
+                           options={"maxiter": self.maxiter, "gtol": 1e-7} if method == "BFGS"
+                           else {"maxiter": self.maxiter, "ftol": self.conv_tol})
+            return np.array(res.x, requires_grad=True)
+        opt_cls = qml.AdamOptimizer if self.optimizer_name == "ADAM" else qml.GradientDescentOptimizer
+        opt = opt_cls(stepsize=self.vqe_lr)
+        e_old = cost(weights)
+        for _ in range(self.maxiter):
+            weights, e_new = opt.step_and_cost(cost, weights)
+            if abs(e_new - e_old) < self.conv_tol:
+                break
+            e_old = e_new
+        return weights
+
+    # ---------------------------------------------------------------- calculate
+    def calculate(self, atoms=None, properties=['energy'], system_changes=all_changes):
         super().calculate(atoms, properties, system_changes)
 
         symbols = atoms.get_chemical_symbols()
-        angstrom_to_bohr = 1.8897259886
-        coords_bohr = np.array(atoms.get_positions() * angstrom_to_bohr, requires_grad=True)
+        angstrom_to_bohr = 1.0 / Bohr
+        static_coords = np.array(atoms.get_positions() * angstrom_to_bohr, requires_grad=False)
         multiplicity = self.spin + 1
 
-        # 1. Total molecular properties calculation
+        # active space
+        mol = qml.qchem.Molecule(symbols, static_coords, charge=self.charge, mult=multiplicity,
+                                 basis_name=self.basis)
         total_electrons = sum(atoms.get_atomic_numbers()) - self.charge
-        static_coords = np.array(atoms.get_positions() * angstrom_to_bohr, requires_grad=False)
-
-        _, total_qubits = qml.qchem.molecular_hamiltonian(
-            symbols, static_coords, basis=self.basis, charge=self.charge, mult=multiplicity, method="dhf"
-        )
-        total_orbitals = total_qubits // 2
-
-        # 2. Active Space Setup
         if self.coreorb > 0:
-            active_orbitals = total_orbitals - self.coreorb
+            active_orbitals = mol.n_orbitals - self.coreorb
             active_electrons = total_electrons - 2 * self.coreorb
         else:
             active_orbitals = None
             active_electrons = None
 
-        H_static, qubits = qml.qchem.molecular_hamiltonian(
-            symbols, static_coords, basis=self.basis,
-            charge=self.charge, mult=multiplicity, method="dhf",
-            active_electrons=active_electrons,
-            active_orbitals=active_orbitals
-        )
+        ham_kwargs = dict(basis=self.basis, charge=self.charge, mult=multiplicity, method="dhf",
+                          active_electrons=active_electrons, active_orbitals=active_orbitals)
+        H_static, qubits = qml.qchem.molecular_hamiltonian(symbols, static_coords, **ham_kwargs)
+        n_el = active_electrons if active_electrons is not None else total_electrons
+        hf_init = qml.qchem.hf_state(n_el, qubits)
 
-        electrons_in_circuit = active_electrons if active_electrons is not None else total_electrons
-        hf_init = qml.qchem.hf_state(electrons_in_circuit, qubits)
-
-        # 3. Dynamic Device and Differentiation Configuration
         dev = qml.device(self.backend, wires=qubits)
-        diff_method_to_use = "backprop" if self.shots is None else "parameter-shift"
+        diff_method = "backprop" if self.shots is None else "parameter-shift"
 
-        # 4. ADAPT-VQE logic
-        if not self.use_ADAPT_memory or not self.chosen_operators:
-            print("   [ADAPT-VQE] Generating and searching operator pool...")
-            singles, doubles = qml.qchem.excitations(electrons_in_circuit, qubits)
-            operator_pool = singles + doubles
-
-            self.chosen_operators = []
-            current_weights = np.array([], requires_grad=True)
-
-            for _ in range(self.adapt_max_operators):
-                pool_gradients = []
-                for op in operator_pool:
-                    def adapt_loss(excitation_weight):
-                        @qml.qnode(dev, shots=self.shots)
-                        def circuit():
-                            qml.BasisState(hf_init, wires=range(qubits))
-                            for w, chosen_op in zip(current_weights, self.chosen_operators):
-                                if len(chosen_op) == 2:
-                                    qml.SingleExcitation(w, wires=chosen_op)
-                                else:
-                                    qml.DoubleExcitation(w, wires=chosen_op)
-                            if len(op) == 2:
-                                qml.SingleExcitation(excitation_weight, wires=op)
-                            else:
-                                qml.DoubleExcitation(excitation_weight, wires=op)
-                            return qml.expval(H_static)
-                        return circuit()
-
-                    grad_val = qml.grad(adapt_loss)(np.array(0.0, requires_grad=True))
-                    pool_gradients.append(abs(grad_val))
-
-                max_grad_idx = np.argmax(pool_gradients)
-                max_grad = pool_gradients[max_grad_idx]
-
-                if max_grad < self.vqe_eigenvalue:
-                    break
-
-                best_op = operator_pool[max_grad_idx]
-                self.chosen_operators.append(best_op)
-                current_weights = np.append(current_weights, 0.0)
-
-            self.vqe_weights = np.array(current_weights, requires_grad=True)
-        else:
-            pass
-
-        # 5. Final QNode execution layer for energy
-        @qml.qnode(dev, diff_method=diff_method_to_use, shots=self.shots)
-        def adapt_energy_circuit(weights, current_hamiltonian):
+        @qml.qnode(dev, diff_method=diff_method, shots=self.shots)
+        def energy_circuit(weights, hamiltonian, ops, extra_op=None, extra_w=0.0):
             qml.BasisState(hf_init, wires=range(qubits))
-            for w, op in zip(weights, self.chosen_operators):
-                if len(op) == 2:
-                    qml.SingleExcitation(w, wires=op)
-                else:
-                    qml.DoubleExcitation(w, wires=op)
-            return qml.expval(current_hamiltonian)
+            for w, op in zip(weights, ops):
+                self._apply(op, w)
+            if extra_op is not None:
+                self._apply(extra_op, extra_w)
+            return qml.expval(hamiltonian)
 
-        # 6. VQE optimization loop
-        if self.maxiter > 0 and len(self.vqe_weights) > 0:
-            opt = self.vqe_optimizer_cls(stepsize=self.vqe_lr)
-            for _ in range(self.maxiter):
-                self.vqe_weights = opt.step(lambda w: adapt_energy_circuit(w, H_static), self.vqe_weights)
+        # ADAPT-VQE: grow the ansatz, re-optimising all parameters after each addition
+        if not self.use_ADAPT_memory or not self.chosen_operators:
+            singles, doubles = qml.qchem.excitations(n_el, qubits)
+            pool = doubles + singles
+            self.chosen_operators = []
+            weights = np.array([], requires_grad=True)
+            for _ in range(self.adapt_max_operators):
+                grads = []
+                for op in pool:
+                    g = qml.grad(lambda x: energy_circuit(weights, H_static, self.chosen_operators, op, x))(
+                        np.array(0.0, requires_grad=True))
+                    grads.append(abs(float(g)))
+                k = int(onp.argmax(grads))
+                if grads[k] < self.vqe_eigenvalue:
+                    break
+                self.chosen_operators.append(pool[k])
+                weights = np.array(onp.append(onp.array(weights, dtype=float), 0.0), requires_grad=True)
+                weights = self._optimize(lambda w: energy_circuit(w, H_static, self.chosen_operators), weights)
+            self.vqe_weights = weights
+        else:
+            # same operators, warm start from previous geometry; re-converge parameters
+            self.vqe_weights = self._optimize(
+                lambda w: energy_circuit(w, H_static, self.chosen_operators),
+                np.array(self.vqe_weights, requires_grad=True))
 
-        # 7. Differentiable loss for analytic forces
-        def loss_function(r_coords):
-            H, _ = qml.qchem.molecular_hamiltonian(
-                symbols, r_coords, basis=self.basis,
-                charge=self.charge, mult=multiplicity, method="dhf",
-                active_electrons=active_electrons,
-                active_orbitals=active_orbitals
-            )
-            return adapt_energy_circuit(self.vqe_weights, H)
+        weights = np.array(self.vqe_weights, requires_grad=False)
+        energy_hartree = energy_circuit(weights, H_static, self.chosen_operators)
 
-        energy_hartree = loss_function(coords_bohr)
-        grad_coords = qml.grad(loss_function)(coords_bohr)
+        # analytic forces: dE/dR at fixed converged parameters (Hellmann-Feynman for the circuit)
+        if 'forces' in properties:
+            def loss(r):
+                H, _ = qml.qchem.molecular_hamiltonian(symbols, r, **ham_kwargs)
+                return energy_circuit(weights, H, self.chosen_operators)
+            coords = np.array(atoms.get_positions() * angstrom_to_bohr, requires_grad=True)
+            grad_coords = qml.grad(loss)(coords)
+            self.results['forces'] = onp.array(-grad_coords * Hartree * angstrom_to_bohr, dtype=float)
 
-        # 8. Dipole moment calculation
-        mol_obj = qml.qchem.Molecule(symbols, static_coords, charge=self.charge, mult=multiplicity)
-        dipole_operators = qml.qchem.molecular_dipole(
-            mol_obj, method="dhf",
-            active_electrons=active_electrons,
-            active_orbitals=active_orbitals
-        )
+        # dipole moment
+        dipole_ops = qml.qchem.molecular_dipole(mol, method="dhf",
+                                                active_electrons=active_electrons,
+                                                active_orbitals=active_orbitals)
+        dip = onp.zeros(3)
+        for i in range(3):
+            dip[i] = float(onp.real(energy_circuit(weights, dipole_ops[i], self.chosen_operators)))
 
-        dipole_vec_au = np.zeros(3)
-        for idx in range(3):
-            @qml.qnode(dev, shots=self.shots)
-            def eval_dipole_component(weights, op_component):
-                qml.BasisState(hf_init, wires=range(qubits))
-                for w, op in zip(weights, self.chosen_operators):
-                    if len(op) == 2:
-                        qml.SingleExcitation(w, wires=op)
-                    else:
-                        qml.DoubleExcitation(w, wires=op)
-                return qml.expval(op_component)
-
-            # FIX: Safely extract the real part before float casting
-            res_val = eval_dipole_component(self.vqe_weights, dipole_operators[idx])
-            dipole_vec_au[idx] = float(np.real(res_val))
-
-        # 9. Convert units back to ASE standard
         self.results['energy'] = float(energy_hartree) * Hartree
-        forces_ev_angstrom = -grad_coords * (Hartree * angstrom_to_bohr)
-        self.results['forces'] = np.array(forces_ev_angstrom)
-
-        a_u_to_Debye = (_e * Bohr) / Debye
-        self.results['dipole'] = dipole_vec_au * a_u_to_Debye
-
+        self.results['dipole'] = dip * (_e * Bohr) / Debye

@@ -27,6 +27,10 @@ pip install -e ".[all]"         # everything, including matplotlib and pytest
 `pyscf`, `joblib`, `qiskit` 1.4.4, `qiskit-algorithms` 0.3.1, `qiskit-nature` 0.7.2 and
 `qiskit-ibm-runtime` 0.41.1. The exact versions used for the paper are listed in `requirements.txt`.
 
+!!! note "ASE versions"
+    FALCON and AGOX require ASE ≤ 3.26, while strainjedi 1.1 requires ASE ≥ 3.28. With `[all]`, ASE 3.26
+    and strainjedi 1.0 are installed; the JEDI tutorial works with both strainjedi versions.
+
 Check the installation:
 
 ```bash

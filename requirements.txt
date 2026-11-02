@@ -9,11 +9,12 @@ qiskit==1.4.4
 qiskit-algorithms==0.3.1
 qiskit-nature==0.7.2
 qiskit-ibm-runtime==0.41.1
+ibm-platform-services>=0.77   # wheels; older versions fail to build with current setuptools
 # Optional backends and tools
 qiskit-aer==0.15.1   # backend='aer_shots'
 pennylane==0.45.1    # PennyLaneAdaptVQECalculator
 falcon-md==1.3.0     # on-the-fly active learning (MD)
 agox==3.11.1         # default FALCON GPR (needs the NumPy-2 fix noted in README)
-strainjedi           # JEDI strain analysis (h3+.py)
+strainjedi==1.0.0    # JEDI (1.1 needs ASE >= 3.28, which conflicts with FALCON/AGOX)
 matplotlib           # figures
 pytest               # tests

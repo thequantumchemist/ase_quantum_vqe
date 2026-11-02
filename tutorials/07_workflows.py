@@ -5,6 +5,8 @@ Tutorial 7: optimization, vibrations and JEDI strain analysis of H3+ with analyt
     python 07_workflows.py
 """
 # --8<-- [start:imports]
+from importlib.metadata import version
+
 from ase import Atoms
 from ase.optimize import BFGS
 from ase.vibrations import Vibrations
@@ -36,6 +38,11 @@ strained.calc = calc
 strained.get_potential_energy()
 
 jedi = Jedi(h3, strained, hessian)
-jedi.add_custom_bonds([[0, 1], [0, 2], [1, 2]])  # H-H bonds of H3+ (~1 A) exceed the default covalent cutoff
+# The H-H bonds of H3+ (~1 A) exceed JEDI's default covalent cutoff. strainjedi 1.0 finds them with a
+# larger covalent factor; strainjedi 1.1 ignores that factor and needs the bonds explicitly.
+if tuple(int(x) for x in version("strainjedi").split(".")[:2]) >= (1, 1):
+    jedi.add_custom_bonds([[0, 1], [0, 2], [1, 2]])
+else:
+    jedi.set_bond_params(covf=2.0, vdwf=0.9)
 jedi.run()
 # --8<-- [end:jedi]

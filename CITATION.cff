@@ -12,7 +12,7 @@ authors:
     email: wido@uni-bremen.de
 identifiers:
   - type: doi
-    value: "10.5281/zenodo.XXXXXXX"    # replace with the Zenodo DOI of the release
+    value: "10.5281/zenodo.23897779"    # replace with the Zenodo DOI of the release
 preferred-citation:
   type: article
   title: "Variational Quantum Forces in Atomistic Simulation Workflows: Analytic Gradients, Measurement Noise, and Force-Controlled Active Learning"

@@ -38,5 +38,6 @@ The equilateral ion has a doubly degenerate e′ pair near 2118 cm⁻¹ and a sy
 ```
 
 JEDI distributes the strain energy of the stretched structure over bonds and angles, using the VQE
-Hessian. The bonds of H₃⁺ (about 1 Å) are longer than JEDI's default covalent cutoff, so they are given
-explicitly. For the global minimum search with minima hopping, see `paper/h3+.py` in the repository.
+Hessian. The bonds of H₃⁺ (about 1 Å) are longer than JEDI's default covalent cutoff: strainjedi 1.0
+finds them with a larger covalent factor, strainjedi 1.1 needs them explicitly, and the script handles
+both. For the global minimum search with minima hopping, see `paper/h3+.py` in the repository.

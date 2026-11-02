@@ -1,0 +1,92 @@
+[project]
+site_name = "ase_quantum_vqe"
+site_description = "VQE energies, forces and dipole moments for any ASE workflow (Qiskit and PennyLane)"
+site_author = "Wilke Dononelli"
+site_url = "https://thequantumchemist.github.io/ase_quantum_vqe/"
+repo_url = "https://github.com/thequantumchemist/ase_quantum_vqe"
+repo_name = "thequantumchemist/ase_quantum_vqe"
+edit_uri = "edit/main/docs/"
+copyright = "ase_quantum_vqe is licensed under the GPL-3.0 License"
+nav = [
+  { "Home" = "index.md" },
+  { "Installation" = "install.md" },
+  { "Example" = "mini_example.md" },
+  { "Tutorials" = [
+    "tutorials/index.md",
+    "tutorials/01-quickstart.md",
+    "tutorials/02-analytic-forces.md",
+    "tutorials/03-active-spaces.md",
+    "tutorials/04-shot-noise.md",
+    "tutorials/05-active-learning-md.md",
+    "tutorials/06-ibm-quantum.md",
+    "tutorials/07-workflows.md",
+  ] },
+  { "Manual" = "manual.md" },
+  { "Paper" = "paper.md" },
+]
+
+[project.theme]
+language = "en"
+features = [
+  "content.action.edit",
+  "content.code.annotate",
+  "content.code.copy",
+  "content.code.select",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.tabs",
+  "navigation.top",
+  "navigation.tracking",
+  "search.highlight",
+  "toc.follow",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"
+
+# Listing extensions here replaces Zensical's defaults, so all are given.
+[project.markdown_extensions]
+abbr = {}
+admonition = {}
+attr_list = {}
+def_list = {}
+footnotes = {}
+md_in_html = {}
+tables = {}
+toc.permalink = true
+pymdownx.arithmatex.generic = true
+pymdownx.betterem = {}
+pymdownx.details = {}
+pymdownx.highlight.anchor_linenums = true
+pymdownx.highlight.line_spans = "__span"
+pymdownx.highlight.pygments_lang_class = true
+pymdownx.inlinehilite = {}
+pymdownx.magiclink = {}
+pymdownx.superfences = {}
+pymdownx.smartsymbols = {}
+pymdownx.tabbed.alternate_style = true
+# Code in the tutorial pages is included from the scripts in tutorials/, which run as tests
+# (tests/docs/test_tutorials.py). Paths are relative to the repository root; a missing file or
+# section fails the build.
+pymdownx.snippets.base_path = ["."]
+pymdownx.snippets.check_paths = true
+pymdownx.snippets.dedent_subsections = true
+pymdownx.emoji.emoji_generator = "zensical.extensions.emoji.to_svg"
+pymdownx.emoji.emoji_index = "zensical.extensions.emoji.twemoji"

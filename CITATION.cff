@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the article and the software release."
+title: "ase_quantum_vqe: ASE calculators for variational quantum eigensolver energies, forces, and dipole moments"
+version: 1.1.0
+date-released: 2026-11-02
+license: GPL-3.0
+repository-code: "https://github.com/thequantumchemist/ase_quantum_vqe"
+authors:
+  - family-names: Dononelli
+    given-names: Wilke
+    affiliation: "University of Bremen"
+    email: wido@uni-bremen.de
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.XXXXXXX"    # replace with the Zenodo DOI of the release
+preferred-citation:
+  type: article
+  title: "Variational Quantum Forces in Atomistic Simulation Workflows: Analytic Gradients, Measurement Noise, and Force-Controlled Active Learning"
+  authors:
+    - family-names: Dononelli
+      given-names: Wilke
+  journal: "Journal of Chemical Information and Modeling"
+  year: 2026
+  notes: "submitted; preprint arXiv:2602.02695"

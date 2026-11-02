@@ -13,17 +13,57 @@ from qiskit_nature.second_q.transformers import ActiveSpaceTransformer
 from qiskit_algorithms.minimum_eigensolvers import VQE,AdaptVQE
 from qiskit_algorithms.optimizers import SLSQP, COBYLA, L_BFGS_B
 
-from qiskit.primitives import Estimator as LocalEstimator
+import warnings
+from qiskit.primitives import Estimator as LocalEstimator      # exact statevector expectation values
 from qiskit_ibm_runtime import QiskitRuntimeService, Estimator as RuntimeEstimator
+from qiskit.primitives import BaseEstimatorV1, EstimatorResult
+from qiskit.primitives.primitive_job import PrimitiveJob
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+
+
+class _EstimatorV1FromV2(BaseEstimatorV1):
+    """Expose a Qiskit Runtime EstimatorV2 through the V1 interface used by qiskit-algorithms.
+
+    Circuits are transpiled to the backend's instruction set and observables are mapped onto
+    the resulting qubit layout before submission.
+    """
+
+    def __init__(self, estimator_v2, backend, optimization_level=1):
+        super().__init__()
+        self._est = estimator_v2
+        self._pm = generate_preset_pass_manager(backend=backend, optimization_level=optimization_level)
+
+    def _call(self, pubs):
+        result = self._est.run(pubs).result()
+        values = np.array([float(np.real(r.data.evs)) for r in result])
+        return EstimatorResult(values, [{} for _ in values])
+
+    def _run(self, circuits, observables, parameter_values, **run_options):
+        pubs = []
+        for circ, obs, params in zip(circuits, observables, parameter_values):
+            isa = self._pm.run(circ)
+            pubs.append((isa, obs.apply_layout(isa.layout), params))
+        job = PrimitiveJob(self._call, pubs)
+        job._submit()
+        return job
+
+
+def make_ibm_estimator(backend, shots=4000, resilience_level=0, optimization_level=1):
+    """V1-compatible estimator for an IBM Quantum backend (or a fake backend for local testing)."""
+    est = RuntimeEstimator(mode=backend, options={"default_shots": shots,
+                                                  "resilience_level": resilience_level})
+    return _EstimatorV1FromV2(est, backend, optimization_level=optimization_level)
+
 
 class QiskitVQECalculator(Calculator):
     implemented_properties = ['energy', 'forces', 'dipole']
 
     def __init__(self, basis='sto3g', optimizer=None, optimizer_name='SLSQP',
                  delta=1e-3, n_jobs=1, charge=0, spin=0, maxiter=200,
-                 backend='aer', shots=4000, resilience_level=0,
+                 backend='statevector', shots=4000, resilience_level=0,
                  ibmq_token=None, estimator_override=None, nfree=2,
-                 coreorb=0,vqe_eigenvalue=1e-07, **kwargs):
+                 coreorb=0, vqe_eigenvalue=1e-07, seed=None,
+                 ibm_channel='ibm_quantum_platform', ibm_instance=None, **kwargs):
         """
         basis:            Basis set (z.B. 'sto3g')
         optimizer:        Qiskit-Optimizer (directly loaded)
@@ -33,10 +73,16 @@ class QiskitVQECalculator(Calculator):
         charge:           Total charge of syste.
         spin:             2S = #alpha - #beta Electrons
         maxiter:          max. iterationens of VQE-optimizer
-        backend:          'aer' or IBMQ Backend-Name
-        shots:            Measurments per QPU-Analizes
+        backend:          'statevector' : exact expectation values (qiskit.primitives.Estimator), shots ignored
+                          'aer_shots'   : finite-shot sampling with qiskit-aer (shots, seed used)
+                          'aer'         : deprecated alias of 'statevector' (kept for old scripts)
+                          any other     : name of an IBM Quantum backend (Qiskit Runtime)
+        shots:            Measurements per measurement setting ('aer_shots' and IBM backends only)
         resilience_level: Error-Mitigation-Level (0–3)
-        ibmq_token:       Optional: IBMQ API-Token (if backend != 'aer')
+        ibmq_token:       Optional IBM Quantum API token (IBM backends only)
+        ibm_channel:      Qiskit Runtime channel ('ibm_quantum_platform' or 'ibm_cloud')
+        ibm_instance:     Optional Qiskit Runtime instance (CRN or name)
+        seed:             Seed for finite-shot sampling ('aer_shots')
         estimator_override: Optional: Exteral Estimator (e.g. keep fixed if running on a real device)
         nfree:            finite displacements per direction per atom for numerical forces (2 or 4)
         coreorb:          number of core orbitals
@@ -56,6 +102,12 @@ class QiskitVQECalculator(Calculator):
         self.nfree = nfree
         self.coreorb = coreorb
         self.vqe_eigenvalue = vqe_eigenvalue
+        self.seed = seed
+        if backend == 'aer':
+            warnings.warn("backend='aer' computes exact expectation values and ignores 'shots'. "
+                          "Use backend='statevector' (same behaviour) or backend='aer_shots' for "
+                          "finite-shot sampling.", DeprecationWarning)
+        self._local = backend in ('statevector', 'aer', 'aer_shots')
 
         # Optimizer-Auswahl
         if optimizer is not None:
@@ -71,11 +123,13 @@ class QiskitVQECalculator(Calculator):
                 raise ValueError(f"Unbekannter optimizer_name: {optimizer_name}")
 
         self.service = None
-        if backend != 'aer' and estimator_override is None:
+        if not self._local and estimator_override is None:
+            kw = {"channel": ibm_channel}
             if ibmq_token:
-                self.service = QiskitRuntimeService(channel="ibm_quantum", token=ibmq_token)
-            else:
-                self.service = QiskitRuntimeService(channel="ibm_quantum")
+                kw["token"] = ibmq_token
+            if ibm_instance:
+                kw["instance"] = ibm_instance
+            self.service = QiskitRuntimeService(**kw)
 
     def _single_point(self, atoms):
         symbols = atoms.get_chemical_symbols()
@@ -114,20 +168,23 @@ class QiskitVQECalculator(Calculator):
         # Estimator
         if self.estimator_override is not None:
             estimator = self.estimator_override
-        elif self.backend == 'aer':
+        elif self.backend in ('statevector', 'aer'):
             estimator = LocalEstimator()
+        elif self.backend == 'aer_shots':
+            from qiskit_aer.primitives import Estimator as AerEstimator
+            run_options = {"shots": self.shots}
+            if self.seed is not None:
+                run_options["seed"] = self.seed
+            estimator = AerEstimator(run_options=run_options, approximation=False)
         else:
             backend_instance = self.service.backend(self.backend)
-            estimator = RuntimeEstimator(
-                backend=backend_instance,
-                options={"shots": self.shots, "resilience_level": self.resilience_level}
-            )
+            estimator = make_ibm_estimator(backend_instance, shots=self.shots,
+                                           resilience_level=self.resilience_level)
 
 #        vqea = VQE(estimator, full_ansatz, optimizer=self.optimizer)
         vqea = VQE(estimator, uccsd_ansatz, optimizer=self.optimizer)
         vqea.initial_point=np.zeros(uccsd_ansatz.num_parameters)
         vqe=AdaptVQE(vqea,gradient_threshold=1e-05, eigenvalue_threshold=self.vqe_eigenvalue)
-        vqe.supports_aux_opperators= lambda: True
         solver = GroundStateEigensolver(mapper, vqe)
         result = solver.solve(problem)
 
@@ -158,7 +215,7 @@ class QiskitVQECalculator(Calculator):
             elif self.nfree == 4:
                 displacements = [+delta, -delta, +2 * delta, -2 * delta]
             else:
-                raise ValueError(f"nfree={self.nfree} wird nicht unterstützt (nur 2 oder 4 erlaubt)")
+                raise ValueError(f"nfree={self.nfree} is not supported (use 2 or 4)")
             for i_atom in range(len(positions)):
                 for j_coord in range(3):
                     for d in displacements:
@@ -186,6 +243,6 @@ class QiskitVQECalculator(Calculator):
                         forces[i_atom, j_coord] = -(e_plus - e_minus) / (2 * delta)
                     elif self.nfree == 4:
                         e_plus1, e_minus1, e_plus2, e_minus2 = disp_energies
-                        forces[i_atom, j_coord] = (-e_plus2 + 8 * e_plus1 - 8 * e_minus1 + e_minus2) / (12 * delta)
+                        forces[i_atom, j_coord] = -(-e_plus2 + 8 * e_plus1 - 8 * e_minus1 + e_minus2) / (12 * delta)
 
             self.results['forces'] = forces

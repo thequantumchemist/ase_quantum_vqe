@@ -33,6 +33,8 @@ class PennyLaneAdaptVQECalculator(Calculator):
                  vqe_lr=0.1,                 # step size for ADAM / GradientDescent
                  use_ADAPT_memory=True,      # reuse operator list and warm-start parameters across geometries
                  shots=None,                 # None = exact expectation values
+                 force_shots=None,           # noise studies: exact VQE, forces sampled with this many shots
+                 seed=None,                  # seed for finite-shot sampling
                  **kwargs):
         super().__init__(**kwargs)
         self.basis = basis
@@ -48,6 +50,8 @@ class PennyLaneAdaptVQECalculator(Calculator):
         self.vqe_lr = vqe_lr
         self.use_ADAPT_memory = use_ADAPT_memory
         self.shots = shots
+        self.force_shots = force_shots
+        self.seed = seed
 
         if self.optimizer_name in ("BFGS", "SLSQP", "L-BFGS-B"):
             if shots is not None:
@@ -117,7 +121,7 @@ class PennyLaneAdaptVQECalculator(Calculator):
         n_el = active_electrons if active_electrons is not None else total_electrons
         hf_init = qml.qchem.hf_state(n_el, qubits)
 
-        dev = qml.device(self.backend, wires=qubits)
+        dev = qml.device(self.backend, wires=qubits, seed=self.seed)
         diff_method = "backprop" if self.shots is None else "parameter-shift"
 
         @qml.qnode(dev, diff_method=diff_method, shots=self.shots)
@@ -159,9 +163,19 @@ class PennyLaneAdaptVQECalculator(Calculator):
 
         # analytic forces: dE/dR at fixed converged parameters (Hellmann-Feynman for the circuit)
         if 'forces' in properties:
+            force_circuit = energy_circuit
+            if self.force_shots is not None:
+                # measurement-noise study: converged (exact) parameters, sampled force estimator
+                @qml.qnode(dev, diff_method="parameter-shift", shots=self.force_shots)
+                def force_circuit(weights, hamiltonian, ops):
+                    qml.BasisState(hf_init, wires=range(qubits))
+                    for w, op in zip(weights, ops):
+                        self._apply(op, w)
+                    return qml.expval(hamiltonian)
+
             def loss(r):
                 H, _ = qml.qchem.molecular_hamiltonian(symbols, r, **ham_kwargs)
-                return energy_circuit(weights, H, self.chosen_operators)
+                return force_circuit(weights, H, self.chosen_operators)
             coords = np.array(atoms.get_positions() * angstrom_to_bohr, requires_grad=True)
             grad_coords = qml.grad(loss)(coords)
             self.results['forces'] = onp.array(-grad_coords * Hartree * angstrom_to_bohr, dtype=float)

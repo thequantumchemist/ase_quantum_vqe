@@ -201,9 +201,13 @@ write('displaced_atoms.traj', displaced_atoms)
 j = Jedi(min_atoms, displaced_atoms, hessian)
 
 # Set bond and van der Waals scaling factors
-# strainjedi >= 1.1 ignores set_bond_params when building the internal coordinates;
-# give the three H-H bonds explicitly (about 1 A, beyond the default covalent cutoff)
-j.add_custom_bonds([[0, 1], [0, 2], [1, 2]])
+# The H-H bonds (about 1 A) exceed JEDI's default covalent cutoff. strainjedi 1.0 finds them with a
+# larger covalent factor; strainjedi 1.1 ignores that factor and needs the bonds explicitly.
+from importlib.metadata import version
+if tuple(int(x) for x in version("strainjedi").split(".")[:2]) >= (1, 1):
+    j.add_custom_bonds([[0, 1], [0, 2], [1, 2]])
+else:
+    j.set_bond_params(covf=2.0, vdwf=0.9)
 
 # Run the strain analysis
 j.run()

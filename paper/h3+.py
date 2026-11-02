@@ -84,11 +84,11 @@ vqe_calc = QiskitVQECalculator(
     spin=0,                  # Spin multiplicity (2S)
     maxiter=100,             # Maximum VQE optimizer iterations
 
-    backend='aer',           # Local Aer simulator backend
-    shots=2000,              # Number of measurement shots
+    backend='statevector',   # exact local simulator ('aer_shots' for sampling)
+    # shots=2000,            # only used with 'aer_shots' or IBM backends
     # resilience_level=3,    # Error mitigation level (0–3)
 
-    # ibmq_token=None,       # IBM Quantum API token (if backend != 'aer')
+    # ibmq_token=None,       # IBM Quantum API token (IBM backends only)
     # estimator_override=None,# External estimator (e.g. runtime estimator)
 
     nfree=2,                 # Finite displacements per DOF for numerical forces
@@ -201,7 +201,9 @@ write('displaced_atoms.traj', displaced_atoms)
 j = Jedi(min_atoms, displaced_atoms, hessian)
 
 # Set bond and van der Waals scaling factors
-j.set_bond_params(covf=2.0, vdwf=0.9)
+# strainjedi >= 1.1 ignores set_bond_params when building the internal coordinates;
+# give the three H-H bonds explicitly (about 1 A, beyond the default covalent cutoff)
+j.add_custom_bonds([[0, 1], [0, 2], [1, 2]])
 
 # Run the strain analysis
 j.run()

@@ -47,11 +47,11 @@ calc = QiskitVQECalculator(
     spin=0,                 # Spin multiplicity (2S = N_alpha - N_beta)
     maxiter=60,             # Maximum number of VQE optimizer iterations
 
-    backend='aer',          # Backend: 'aer' (local simulator) or IBMQ backend name
+    backend='statevector',  # 'statevector' (exact), 'aer_shots' (sampled), or IBM backend name
     # shots=4000,           # Number of measurement shots per quantum circuit
     # resilience_level=0,   # Error mitigation level (0–3)
 
-    # ibmq_token=None,      # IBM Quantum API token (required if backend != 'aer')
+    # ibmq_token=None,      # IBM Quantum API token (IBM backends only)
     # estimator_override=None,  # External estimator (e.g. fixed runtime estimator)
 
     # nfree=2,              # Finite displacements per direction per atom (2 or 4)

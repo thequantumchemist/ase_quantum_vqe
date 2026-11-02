@@ -1,0 +1,360 @@
+{
+ "system": "H2",
+ "ref_bonds": [
+  0.7348652401660811
+ ],
+ "fmax": 0.05,
+ "maxsteps": 30,
+ "runs": [
+  {
+   "shots": 0,
+   "seed": 0,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.00014130238118015281
+  },
+  {
+   "shots": 0,
+   "seed": 1,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.00014130238118015281
+  },
+  {
+   "shots": 0,
+   "seed": 2,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.00014130238118015281
+  },
+  {
+   "shots": 0,
+   "seed": 3,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.00014130238118015281
+  },
+  {
+   "shots": 0,
+   "seed": 4,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.00014130238118015281
+  },
+  {
+   "shots": 0,
+   "seed": 5,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.00014130238118015281
+  },
+  {
+   "shots": 0,
+   "seed": 6,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.00014130238118015281
+  },
+  {
+   "shots": 0,
+   "seed": 7,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.00014130238118015281
+  },
+  {
+   "shots": 0,
+   "seed": 8,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.00014130238118015281
+  },
+  {
+   "shots": 0,
+   "seed": 9,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.00014130238118015281
+  },
+  {
+   "shots": 100,
+   "seed": 0,
+   "converged": true,
+   "steps": 10,
+   "max_bond_error": 0.003833812691616645
+  },
+  {
+   "shots": 100,
+   "seed": 1,
+   "converged": true,
+   "steps": 7,
+   "max_bond_error": 0.01115731646033813
+  },
+  {
+   "shots": 100,
+   "seed": 2,
+   "converged": true,
+   "steps": 10,
+   "max_bond_error": 0.025658736101566104
+  },
+  {
+   "shots": 100,
+   "seed": 3,
+   "converged": true,
+   "steps": 6,
+   "max_bond_error": 0.004649119325364159
+  },
+  {
+   "shots": 100,
+   "seed": 4,
+   "converged": true,
+   "steps": 8,
+   "max_bond_error": 0.01996531523971168
+  },
+  {
+   "shots": 100,
+   "seed": 5,
+   "converged": true,
+   "steps": 8,
+   "max_bond_error": 0.014608175508517673
+  },
+  {
+   "shots": 100,
+   "seed": 6,
+   "converged": true,
+   "steps": 3,
+   "max_bond_error": 0.010212210946458855
+  },
+  {
+   "shots": 100,
+   "seed": 7,
+   "converged": true,
+   "steps": 14,
+   "max_bond_error": 0.024777511366417815
+  },
+  {
+   "shots": 100,
+   "seed": 8,
+   "converged": true,
+   "steps": 7,
+   "max_bond_error": 0.015118489331423679
+  },
+  {
+   "shots": 100,
+   "seed": 9,
+   "converged": true,
+   "steps": 10,
+   "max_bond_error": 0.008298019000726242
+  },
+  {
+   "shots": 1000,
+   "seed": 0,
+   "converged": true,
+   "steps": 3,
+   "max_bond_error": 0.0032115107572552315
+  },
+  {
+   "shots": 1000,
+   "seed": 1,
+   "converged": true,
+   "steps": 8,
+   "max_bond_error": 0.00309601281636529
+  },
+  {
+   "shots": 1000,
+   "seed": 2,
+   "converged": true,
+   "steps": 11,
+   "max_bond_error": 0.0037193496392486924
+  },
+  {
+   "shots": 1000,
+   "seed": 3,
+   "converged": true,
+   "steps": 3,
+   "max_bond_error": 0.002817620824356326
+  },
+  {
+   "shots": 1000,
+   "seed": 4,
+   "converged": true,
+   "steps": 7,
+   "max_bond_error": 0.003166957378177404
+  },
+  {
+   "shots": 1000,
+   "seed": 5,
+   "converged": true,
+   "steps": 9,
+   "max_bond_error": 0.009266502186131564
+  },
+  {
+   "shots": 1000,
+   "seed": 6,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 4.851874134603751e-05
+  },
+  {
+   "shots": 1000,
+   "seed": 7,
+   "converged": true,
+   "steps": 12,
+   "max_bond_error": 0.004151534165324433
+  },
+  {
+   "shots": 1000,
+   "seed": 8,
+   "converged": true,
+   "steps": 10,
+   "max_bond_error": 0.00535933286994883
+  },
+  {
+   "shots": 1000,
+   "seed": 9,
+   "converged": true,
+   "steps": 7,
+   "max_bond_error": 0.005880980073318387
+  },
+  {
+   "shots": 10000,
+   "seed": 0,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.0021867736141342187
+  },
+  {
+   "shots": 10000,
+   "seed": 1,
+   "converged": true,
+   "steps": 8,
+   "max_bond_error": 0.00040959460902512124
+  },
+  {
+   "shots": 10000,
+   "seed": 2,
+   "converged": true,
+   "steps": 7,
+   "max_bond_error": 0.0022042225707462615
+  },
+  {
+   "shots": 10000,
+   "seed": 3,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.0022088258594442634
+  },
+  {
+   "shots": 10000,
+   "seed": 4,
+   "converged": true,
+   "steps": 8,
+   "max_bond_error": 0.0017551159593163224
+  },
+  {
+   "shots": 10000,
+   "seed": 5,
+   "converged": true,
+   "steps": 9,
+   "max_bond_error": 0.00066654352747475
+  },
+  {
+   "shots": 10000,
+   "seed": 6,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.0012451844963720093
+  },
+  {
+   "shots": 10000,
+   "seed": 7,
+   "converged": true,
+   "steps": 12,
+   "max_bond_error": 0.0012427416255844648
+  },
+  {
+   "shots": 10000,
+   "seed": 8,
+   "converged": true,
+   "steps": 11,
+   "max_bond_error": 0.002510553970992979
+  },
+  {
+   "shots": 10000,
+   "seed": 9,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.0063962910821457886
+  },
+  {
+   "shots": 100000,
+   "seed": 0,
+   "converged": true,
+   "steps": 10,
+   "max_bond_error": 0.0010915540881468733
+  },
+  {
+   "shots": 100000,
+   "seed": 1,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.0005737258052574967
+  },
+  {
+   "shots": 100000,
+   "seed": 2,
+   "converged": true,
+   "steps": 9,
+   "max_bond_error": 0.00026357347215011373
+  },
+  {
+   "shots": 100000,
+   "seed": 3,
+   "converged": true,
+   "steps": 8,
+   "max_bond_error": 0.0004364561459047067
+  },
+  {
+   "shots": 100000,
+   "seed": 4,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.00016171927065178338
+  },
+  {
+   "shots": 100000,
+   "seed": 5,
+   "converged": true,
+   "steps": 13,
+   "max_bond_error": 0.00021602517364638363
+  },
+  {
+   "shots": 100000,
+   "seed": 6,
+   "converged": true,
+   "steps": 14,
+   "max_bond_error": 6.719778609776128e-06
+  },
+  {
+   "shots": 100000,
+   "seed": 7,
+   "converged": true,
+   "steps": 4,
+   "max_bond_error": 0.00013001555226821448
+  },
+  {
+   "shots": 100000,
+   "seed": 8,
+   "converged": true,
+   "steps": 10,
+   "max_bond_error": 0.0015811693563434481
+  },
+  {
+   "shots": 100000,
+   "seed": 9,
+   "converged": true,
+   "steps": 8,
+   "max_bond_error": 3.860969566693573e-05
+  }
+ ]
+}

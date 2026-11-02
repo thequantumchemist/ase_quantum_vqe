@@ -1,0 +1,50 @@
+{
+ "direct_1 | energy-only GP, eps_E=0.05 eV": {
+  "calls": 4,
+  "max_force_err": 4.347300753444815,
+  "mean_force_err": 0.4824710484285363,
+  "max_energy_err": 0.15579502179643967
+ },
+ "direct_1 | energy+force GP, eps_E=0.05 eV": {
+  "calls": 2,
+  "max_force_err": 3.9756358176668813,
+  "mean_force_err": 0.36086697976688603,
+  "max_energy_err": 0.1264866477087736
+ },
+ "direct_1 | energy+force GP, eps_F=0.10 eV/A": {
+  "calls": 6,
+  "max_force_err": 0.21806102884136347,
+  "mean_force_err": 0.00790759323471191,
+  "max_energy_err": 0.0019527414923210529
+ },
+ "direct_1 | energy+force GP, eps_F=0.05 eV/A": {
+  "calls": 8,
+  "max_force_err": 0.13776938487214618,
+  "mean_force_err": 0.008104637078015835,
+  "max_energy_err": 0.001443090268832492
+ },
+ "direct_2 | energy-only GP, eps_E=0.05 eV": {
+  "calls": 4,
+  "max_force_err": 4.072750005381891,
+  "mean_force_err": 0.5899377794592277,
+  "max_energy_err": 0.13919359215184812
+ },
+ "direct_2 | energy+force GP, eps_E=0.05 eV": {
+  "calls": 2,
+  "max_force_err": 2.56789869827065,
+  "mean_force_err": 0.26129538063981006,
+  "max_energy_err": 0.09457482890028501
+ },
+ "direct_2 | energy+force GP, eps_F=0.10 eV/A": {
+  "calls": 6,
+  "max_force_err": 0.4868108845267445,
+  "mean_force_err": 0.02433108532242048,
+  "max_energy_err": 0.00549825694663042
+ },
+ "direct_2 | energy+force GP, eps_F=0.05 eV/A": {
+  "calls": 7,
+  "max_force_err": 0.1571935549161596,
+  "mean_force_err": 0.008573654373701767,
+  "max_energy_err": 0.0020429700750490554
+ }
+}

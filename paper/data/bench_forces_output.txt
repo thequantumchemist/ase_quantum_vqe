@@ -1,0 +1,6 @@
+H2 r=0.80      Qiskit FD d=1e-3     max|dF| = 3.30e-05 eV/A   time =    2.7 s
+H2 r=0.80      Qiskit FD d=1e-2     max|dF| = 2.70e-03 eV/A   time =    2.7 s
+H2 r=0.80      PennyLane analytic   max|dF| = 2.99e-07 eV/A   time =    0.6 s
+H3+ distorted  Qiskit FD d=1e-3     max|dF| = 8.49e-04 eV/A   time =   64.6 s
+H3+ distorted  Qiskit FD d=1e-2     max|dF| = 4.43e-03 eV/A   time =   61.2 s
+H3+ distorted  PennyLane analytic   max|dF| = 1.86e-07 eV/A   time =   21.2 s

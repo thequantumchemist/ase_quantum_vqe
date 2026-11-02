@@ -1,0 +1,54 @@
+{
+ "system": "H3+",
+ "ref_bonds": [
+  0.9856550762785219,
+  0.9856570303450851,
+  0.985661602204327
+ ],
+ "fmax": 0.05,
+ "maxsteps": 20,
+ "runs": [
+  {
+   "shots": 100000,
+   "seed": 0,
+   "converged": false,
+   "steps": 20,
+   "max_bond_error": 0.004650507888786182
+  },
+  {
+   "shots": 100000,
+   "seed": 1,
+   "converged": false,
+   "steps": 20,
+   "max_bond_error": 0.00937787387814848
+  },
+  {
+   "shots": 100000,
+   "seed": 2,
+   "converged": false,
+   "steps": 20,
+   "max_bond_error": 0.040128520828987435
+  },
+  {
+   "shots": 1000000,
+   "seed": 0,
+   "converged": false,
+   "steps": 20,
+   "max_bond_error": 0.0051183732177768615
+  },
+  {
+   "shots": 1000000,
+   "seed": 1,
+   "converged": false,
+   "steps": 20,
+   "max_bond_error": 0.0001729733096852426
+  },
+  {
+   "shots": 1000000,
+   "seed": 2,
+   "converged": false,
+   "steps": 20,
+   "max_bond_error": 0.0121163092806712
+  }
+ ]
+}

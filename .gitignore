@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.venv/
+.pytest_cache/
+
+# documentation build (created by zensical)
+site/
+.cache/
+
+# outputs of the tutorials and paper scripts
+*.traj
+*.log
+vib*/
+*.json
+*.pdf
+*.png
+
+# ...but keep the files that belong to the repository
+!paper/data/**/*.json
+!paper/md_analysis/h2_fci_grid.json
+!docs/assets/**/*.png

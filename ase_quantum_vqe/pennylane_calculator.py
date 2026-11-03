@@ -26,7 +26,7 @@ class PennyLaneAdaptVQECalculator(Calculator):
                  coreorb=0,                  # number of frozen core orbitals
                  maxiter=200,                # max optimizer iterations per VQE solve
                  conv_tol=1e-9,              # energy convergence threshold (Hartree)
-                 backend="default.qubit",    # "default.qubit" or "lightning.qubit"
+                 backend="default.qubit",    # "default.qubit" or "lightning.qubit" (faster VQE optimization)
                  vqe_eigenvalue=1e-5,        # ADAPT gradient threshold for adding operators
                  adapt_max_operators=30,     # max number of ADAPT operators
                  optimizer_name="BFGS",      # 'BFGS' / 'SLSQP' (scipy, exact simulators) or 'ADAM' / 'GradientDescent'
@@ -122,7 +122,11 @@ class PennyLaneAdaptVQECalculator(Calculator):
         hf_init = qml.qchem.hf_state(n_el, qubits)
 
         dev = qml.device(self.backend, wires=qubits, seed=self.seed)
-        diff_method = "backprop" if self.shots is None else "parameter-shift"
+        # lightning devices: adjoint differentiation for the circuit parameters (fast VQE optimization)
+        if self.shots is None:
+            diff_method = "adjoint" if self.backend.startswith("lightning") else "backprop"
+        else:
+            diff_method = "parameter-shift"
 
         @qml.qnode(dev, diff_method=diff_method, shots=self.shots)
         def energy_circuit(weights, hamiltonian, ops, extra_op=None, extra_w=0.0):
@@ -164,6 +168,15 @@ class PennyLaneAdaptVQECalculator(Calculator):
         # analytic forces: dE/dR at fixed converged parameters (Hellmann-Feynman for the circuit)
         if 'forces' in properties:
             force_circuit = energy_circuit
+            if self.force_shots is None and self.backend.startswith("lightning"):
+                # adjoint differentiation does not differentiate Hamiltonian coefficients, so the
+                # nuclear gradient is evaluated by backpropagation on default.qubit
+                @qml.qnode(qml.device("default.qubit", wires=qubits), diff_method="backprop")
+                def force_circuit(weights, hamiltonian, ops):
+                    qml.BasisState(hf_init, wires=range(qubits))
+                    for w, op in zip(weights, ops):
+                        self._apply(op, w)
+                    return qml.expval(hamiltonian)
             if self.force_shots is not None:
                 # measurement-noise study: converged (exact) parameters, sampled force estimator
                 @qml.qnode(dev, diff_method="parameter-shift", shots=self.force_shots)

@@ -74,7 +74,7 @@ converged parameters θ\*.
 | `vqe_eigenvalue` | `1e-5` | ADAPT gradient threshold (Ha) |
 | `adapt_max_operators` | `30` | maximum number of ADAPT operators |
 | `use_ADAPT_memory` | `True` | reuse the operator list and warm-start the parameters at the next geometry |
-| `backend` | `"default.qubit"` | PennyLane device (`"lightning.qubit"` for speed) |
+| `backend` | `"default.qubit"` | PennyLane device; `"lightning.qubit"` speeds up the VQE optimization (forces are still evaluated on `"default.qubit"`) |
 | `shots` | `None` | finite shots for everything (requires `"ADAM"` or `"GradientDescent"`) |
 | `force_shots`, `seed` | `None`, `None` | noise studies: exact parameters, sampled forces |
 

@@ -8,6 +8,10 @@ MODE=falcon REF=pennylane MODEL=agox SEED=1 OUT=falcon_pl_1 python h2_md.py
 MODE=falcon REF=pennylane MODEL=distance TRAIN_START=2 TRAIN_LOG=0 ACC_E=0.05 ACC_F=0.1 SEED=2 OUT=nolog_e0.05_f0.1_s2 python h2_md.py
 python plot_md_final.py 4072
 
+# Table: effect of model and criterion (same initial conditions)
+MODE=falcon REF=pennylane MODEL=agox ACC_F=1.0 SEED=2 OUT=falcon_pl_2_af10 python h2_md.py
+MODE=falcon REF=pennylane MODEL=distance TRAIN_START=2 TRAIN_LOG=0 ACC_E=0.05 SEED=2 OUT=nolog_e0.05_finf_s2 python h2_md.py
+
 # Table 7: 10 ps, ten seeds each
 for s in 1 2 3 4 5 6 7 8 9 10; do
   MODE=direct REF=oracle THERMO=falcon SEED=$s STEPS=20000 OUT=long_exact_s$s python h2_md.py

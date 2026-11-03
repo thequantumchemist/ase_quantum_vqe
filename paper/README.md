@@ -14,15 +14,18 @@ directory. Runtimes are for one CPU core unless stated otherwise.
 | H₂ validation, PennyLane (text, Results) | `h2_pennylane.py` | – | < 1 min |
 | F₂ in a (2e, 2o) active space (text, Results) | `f2.py` | – | minutes |
 | BeH₂ frequencies, ADAPT-VQE (table, Results) | `beh2_frequencies.py` | – | hours, 18 cores |
+| BeH₂ frequencies, PennyLane (optional table row) | `beh2_frequencies_pennylane.py` | – | several hours, one core |
 | BeH₂ frequencies, FCI and CCSD (table, Results) | `beh2_reference.py` | – | < 1 min |
 | Force accuracy and cost (table) | `bench_forces.py` | `data/bench_forces_output.txt` | ~2 min |
 | Sampling statistics (table) and Figure 2 | `noise_analysis/exact_variance.py`, `noise_analysis/plot_exact.py` | `data/noise/exact_variance.json` | ~3 min |
-| Validation of the variances against qiskit-aer sampling (text) | `noise_analysis/validate_fd_and_seed.py`, `noise_analysis/validate_analytic.py` | – | ~5 min |
+| Validation of the variances against qiskit-aer sampling (Figure 2 symbols, SI Section S3) | `noise_analysis/sample_h2.py`, `noise_analysis/validate_fd_and_seed.py`, `noise_analysis/validate_analytic.py` | `data/noise/sampled_h2.json` | ~45 min |
 | Geometry optimization with sampled forces (table) | `noise_analysis/noisy_opt.py` (`SYS=H2` or `SYS=H3+`) | `data/noise/noisy_opt_*.json` | H₂ ~5 min; H₃⁺ ~2 min per run |
 | H₃⁺ minima hopping, vibrations, JEDI (Figure 3, table) | `h3+.py` | – | hours |
 | Figure 4 and the 10 ps MD table | `md_analysis/run_md_table.sh` (calls `h2_md.py`, `plot_md_final.py`, `summarize_md.py`) | `data/md/*.npz` | ~30 min in total |
 | Offline test of surrogate settings (text, MD section) | `md_analysis/pseudo_al.py` | `data/md/pseudo_al.json` | ~2 min |
 | BeH₂ trajectory (Figure 5) | `beh2_md.py` (needs `start.traj` and `train.traj` of the published run) | – | > 1 day, 18 cores |
+| BeH₂ MD with the distance GP (follow-up) | `beh2_md_distance_gp.py`, then `validate_md_trajectory.py` | – | long, 18 cores |
+| Validation of any MD trajectory against FCI or CCSD forces | `validate_md_trajectory.py` | – | minutes |
 | Figure S1 (original FALCON setup) | `legacy/h2_ML_FALCON_MD.py` | – | hours |
 
 `noise_analysis/noise_forces_run.py` is an optional direct sampling benchmark; the paper uses the exact
